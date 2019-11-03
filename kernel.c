@@ -29,29 +29,34 @@ int main(){
 
 }
 
-/*
-void readFile(char* buffer, char* filename, int &sectorsRead){
+//takes buffer to write to,string file name, and address of sectors read
+void readFile(char* buffer, char* filename, int sectorsRead){
+
 	char dir[512];
+	int fileEntry;
+	int i;
 	//read sector 2 into a buffer	
 	readSector(dir,2); 
-	int fileEntry;
 	//iterate over every file entry in sector
 	for(fileEntry=0;fileEntry<512;fileEntry+=32){ 
 		// string compare using fileEntry as an offset.
-		if(stringCompare(filename, dir, fileEntry) == 0){
+		if(strCompare(filename, dir, fileEntry) == 0){
 			sectorsRead = 0;
 			return;
 		}
-
-		//load the file sector by sector into buffer.
-
-
+	}
+	//load the file sector by sector into the buffer
+	for(i=0;i</*SOMETHING*/;i++){ //not sure yet
+		if(dir[fileEntry+i]==0x0){return;}
+		readSector(*buffer,dir[fileEntry+i]);//potential pointer issue-----
+		buffer+=512;
+		sectorsRead++;
+		
 	}
 
-	
 }
 	
-*/
+
 
 //compare string. takes: string1, string2, offset value; returns 0=F,1=T
 int strCompare(char* str1, char* str2, int offset){  
