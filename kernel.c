@@ -15,44 +15,61 @@ void readFile(char* buffer, char* message, int &sectorRead);
 int strCompare(char* str1, char* str2, int offset);
 
 int main(){
-/*
+		
 	char buffer[13312]; //this is the maximum size of a file
 	int sectorsRead;
+
 	makeInterrupt21();
-	interrupt(0x21, 3, "messag", buffer, &sectorsRead); //read the file into buffer
+	//interrupt(0x21, 3, "messag", buffer, &sectorsRead); //read the file into buffer
+	
+	readFile(buffer,"messag",&sectorsRead);
 	if (sectorsRead>0)
 		interrupt(0x21, 0, buffer, 0, 0); //print out the file
 	else
 		interrupt(0x21, 0, "messag not found\r\n", 0, 0); //no sectors read? then print an error/
-*/	 
+
+
 	while(1);/*boucle infini*/
 
 }
 
 //takes buffer to write to,string file name, and address of sectors read
-void readFile(char* buffer, char* filename, int sectorsRead){
+void readFile(char* buffer, char* filename, int* sectorsRead){
 
 	char dir[512];
 	int fileEntry;
 	int i;
+	char entryName[6];
+	*sectorsRead = 0;
 	//read sector 2 into a buffer	
 	readSector(dir,2); 
 	//iterate over every file entry in sector
 	for(fileEntry=0;fileEntry<512;fileEntry+=32){ 
-		// string compare using fileEntry as an offset.
-		if(strCompare(filename, dir, fileEntry) == 0){
-			sectorsRead = 0;
-			return;
+		//copy filename into array named entryName
+		for(i=0;i<6;i++){
+			entryName[i] = dir[fileEntry+i];
 		}
+
+		// string compare  fileName vs entryName
+		if(strCompare(filename, entryName,0) == 0){
+			*sectorsRead = 0;
+			printString("sectors Read set to 0\r\n");
+			continue;
+		}
+		if(strCompare(filename, entryName, 0)==1){
+			//load the file sector by sector into the buffer
+			for(i=fileEntry+6;i<fileEntry+32;i++){
+				//if(dir[i]==0x0){return;}//--if dir == NULL, stop. 
+				readSector(buffer,dir[i]);
+				buffer+=512;
+				*sectorsRead = *sectorsRead+1;		
+			}
+			return;	
+		}
+	
 	}
-	//load the file sector by sector into the buffer
-	for(i=0;i</*SOMETHING*/;i++){ //not sure yet
-		if(dir[fileEntry+i]==0x0){return;}
-		readSector(*buffer,dir[fileEntry+i]);//potential pointer issue-----
-		buffer+=512;
-		sectorsRead++;
-		
-	}
+	return;
+	
 
 }
 	
@@ -62,6 +79,12 @@ void readFile(char* buffer, char* filename, int sectorsRead){
 int strCompare(char* str1, char* str2, int offset){  
 	int i;
 	for(i=0;i<6;i++){
+		
+		printChar(str1[i]);
+		printChar(str2[i+offset]);
+		printChar('\r');
+		printChar('\n');
+		
 		if(str1[i]==0x0 && str2[i+offset]==0x0){break;}
 		if(str1[i]=='\r' && str2[i+offset]==0x0){break;}
 		if(str1[i] != str2[i+offset]){return 0;}
@@ -135,16 +158,16 @@ void readSector(char* buffer, int sector){
 
 
 void handleInterrupt21(int ax, int bx, int cx, int dx){
-	//printString("Hello World! I am comming at you live from the interrupt!");
 	if(ax == 0){ //print string
 		printString(bx);
 	}else if(ax == 1){ //read string
 		readString(bx);
 	}else if(ax == 2){ //read sector
 		readSector(bx,cx);
-	}else{
-		printString("ERROR");
-	}
+	}else if(ax==3){
+		//filename,buffer,sectors as opposed to buffer, filename,sectors (as written)
+		readFile(cx,bx,dx);
+	}else{printString("ERROR");}
 }
 
 

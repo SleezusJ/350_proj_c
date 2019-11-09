@@ -58,12 +58,14 @@ echo -e "\e[96mMaking a backup..."
 cp diskc.img diskc.img.old
 
 echo -e "\e[96mOverwriting diskc.img..."
-dd if=kernel of=diskc.img bs=512 conv=notrunc seek=3
+#dd if=kernel of=diskc.img bs=512 conv=notrunc seek=3
 
-#remove when necessary----------------------------------------------
+#add message.txt to diskc.img----------------------------------------------
 #echo -e "\e[96mwriting message.txt to diskc.img..."
 #dd if=message.txt of=diskc.img bs=512 count=1 seek=30 conv=notrunc
-
+echo -e "\e[96mloading file..."
+./loadFile kernel
+./loadFile message.txt
 #-------------------------------------------------------------------
 
 
