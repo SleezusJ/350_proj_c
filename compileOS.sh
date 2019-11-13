@@ -37,43 +37,62 @@ echo -e "\e[96mCreating kernel and associated artifacts...\e[33m"
 
 bcc kernel.c -ansi -c -o kernel.o
 if [ $? -ne 0 ]; then
-     echo -e "\e[31mFailed on compilation of kernel.o"
+     echo -e "\e[31mFailed on compilation of kernel.o!"
      exit 2
 fi
 
 as86 kernel.asm -o kernel_asm.o
 if [ $? -ne 0 ]; then
-     echo -e "\e[31mFailed on assembly of kernel_asm.o"
+     echo -e "\e[31mFailed on assembly of kernel_asm.o!"
      exit 3
 
 fi
 ld86 -o kernel -d kernel.o kernel_asm.o
 if [ $? -ne 0 ]; then
-     echo -e "\e[31mFailed on linking"
+     echo -e "\e[31mFailed on linking kernel!"
      exit 4
 fi
 
 
-echo -e "\e[96mMaking a backup..."
-cp diskc.img diskc.img.old
+#Compile shell
+echo -e "\e[96mCreating shell and associated artifacts...\e[33m"
 
-echo -e "\e[96mOverwriting diskc.img..."
-#dd if=kernel of=diskc.img bs=512 conv=notrunc seek=3
+bcc shell.c -ansi -c -o shell.o
+if [ $? -ne 0 ]; then
+     echo -e "\e[31mFailed on compilation of shell.o!"
+     exit 5
+fi
 
-#add message.txt to diskc.img----------------------------------------------
-#echo -e "\e[96mwriting message.txt to diskc.img..."
-#dd if=message.txt of=diskc.img bs=512 count=1 seek=30 conv=notrunc
-echo -e "\e[96mloading file..."
+as86 userlib.asm -o userlib.o
+if [ $? -ne 0 ]; then
+     echo -e "\e[31mFailed on assembly of userlib.o!"
+     exit 6
+
+fi
+ld86 -o shell -d shell.o userlib.o
+if [ $? -ne 0 ]; then
+     echo -e "\e[31mFailed on linking shell!"
+     exit 7
+fi
+
+
+
+
+#load programs to diskc.img
+echo -e "\e[96mloading programs..."
 ./loadFile kernel
 ./loadFile message.txt
-#-------------------------------------------------------------------
+./loadFile tstpr1
+./loadFile tstpr2
+./loadFile shell
+
 
 
 echo -e "\e[96mCleaning up..."
-mv diskc.img.old artifacts
 mv kernel.o artifacts
 mv kernel_asm.o artifacts
-
+mv userlib.o artifacts
+mv shell.o artifacts
 
 
 echo -e "\e[96mDone."

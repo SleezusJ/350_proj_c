@@ -13,23 +13,56 @@ void readSector(char* buffer, int sector);
 void handleInterrupt21(int ax, int bx, int cx, int dx);
 void readFile(char* buffer, char* message, int &sectorRead);
 int strCompare(char* str1, char* str2, int offset);
+void executeProgram(char* name);
+void terminate();
+
 
 int main(){
 		
-	char buffer[13312]; //this is the maximum size of a file
+	makeInterrupt21();
+	interrupt(0x21, 4, "shell", 0, 0);
+	while(1);/*boucle infini*/
+
+}
+
+
+void terminate(){
+
+	char shellname[6];
+
+	shellname[0]='s'; shellname[1]='h';
+	shellname[2]='e'; shellname[3]='l';
+	shellname[4]='l'; shellname[5]='\0';
+
+
+	interrupt(0x21,4,shellname,0,0);
+}
+
+
+//takes name of file to execute and loads into memory
+void executeProgram(char* name){
+
+	char buffer[13312];
 	int sectorsRead;
+	int i;
+	int offset = 0x0;
 
 	makeInterrupt21();
-	//interrupt(0x21, 3, "messag", buffer, &sectorsRead); //read the file into buffer
-	
-	readFile(buffer,"messag",&sectorsRead);
-	if (sectorsRead>0)
-		interrupt(0x21, 0, buffer, 0, 0); //print out the file
-	else
-		interrupt(0x21, 0, "messag not found\r\n", 0, 0); //no sectors read? then print an error/
+	interrupt(0x21,3,name,buffer, &sectorsRead);
+	if(sectorsRead>0){
+		for(i=0;i<13312;i++){
+			
+			//putInMemory(segment,address,char)
+			putInMemory(0x2000, offset, buffer[i]);
+			
+			offset++;
+		}
+		launchProgram(0x2000);
 
+	}else{
+		interrupt(0x21,0,"program not found!\r\n",0,0);
+	}
 
-	while(1);/*boucle infini*/
 
 }
 
@@ -53,7 +86,7 @@ void readFile(char* buffer, char* filename, int* sectorsRead){
 		// string compare  fileName vs entryName
 		if(strCompare(filename, entryName,0) == 0){
 			*sectorsRead = 0;
-			printString("sectors Read set to 0\r\n");
+			//printString("sectors Read set to 0\r\n");
 			continue;
 		}
 		if(strCompare(filename, entryName, 0)==1){
@@ -80,11 +113,13 @@ int strCompare(char* str1, char* str2, int offset){
 	int i;
 	for(i=0;i<6;i++){
 		
+		/*
 		printChar(str1[i]);
 		printChar(str2[i+offset]);
 		printChar('\r');
 		printChar('\n');
-		
+		*/
+
 		if(str1[i]==0x0 && str2[i+offset]==0x0){break;}
 		if(str1[i]=='\r' && str2[i+offset]==0x0){break;}
 		if(str1[i] != str2[i+offset]){return 0;}
@@ -167,6 +202,10 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 	}else if(ax==3){
 		//filename,buffer,sectors as opposed to buffer, filename,sectors (as written)
 		readFile(cx,bx,dx);
+	}else if(ax==4){
+		executeProgram(bx);	
+	}else if(ax==5){
+		terminate();
 	}else{printString("ERROR");}
 }
 
