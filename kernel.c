@@ -188,7 +188,7 @@ void readSector(char* buffer, int sector){
 	int DL = 0x80; //device number
 
 	interrupt(0x13,AH*256+AL,buffer,CH*256+CL,DH*256+DL);
-
+cmd
 }
 
 
@@ -206,6 +206,8 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 		executeProgram(bx);	
 	}else if(ax==5){
 		terminate();
+	}else if(ax==42){
+		stringCompare(bx,cx,dx);
 	}else{printString("ERROR");}
 }
 
