@@ -1,9 +1,12 @@
 
 void type(char* filename);
+int strCompare(char* str1, char* str2);
 
 int main(){
+
 char* cmdBuffer;
-char* cmdName;
+char cmdName[4];
+char filename[6];
 int i;
 	while(1){
 		//print prompt:
@@ -11,19 +14,29 @@ int i;
 		//read command
 		syscall(1,cmdBuffer); //readString
 		//------------------------------------
-		cmdName[10]; //change size if necessary
-		for(i=0;i<10;i++){cmdName[i] = cmdBuffer[i];}
+
+		//parse out command name
+		for(i=0;i<4;i++){cmdName[i] = cmdBuffer[i];}
 		
-		if(syscall(42,"type",cmdName,0) == 1){
-			//run type func.
-			//test
-			syscall(0,cmdName);
+		//compare cmd
+		if(strCompare(cmdName, "type") == 1){
+			
+			//load file name
+			for(i=0;i<6;i++){
+				filename[i] = cmdBuffer[i+5];	
+			}
+			//run type func with file name as a param.
+			syscall(0,"this is the filename:\r\n");
+			syscall(0,filename);
+	
+		}else{
+			syscall(0,"ERROR! This is what is registering: \r\n");
+			syscall(0,cmdName); //-----------TEST
+			//try to execute
+			//syscall(4,cmdBuffer);
+
+			syscall(0,"Command not found!\n\r"); //if we get to this point, the command did not run.
 		}
-
-		//try to execute
-		syscall(4,cmdBuffer);
-
-		syscall(0,"Command not found!\n\r"); //if we get to this point, the command did not run.
 	}
 
 }
@@ -43,5 +56,21 @@ void type(char* filename){
 
 
 }
+
+
+
+
+//compare string. takes: string1, string2; returns 0=F,1=T
+int strCompare(char* str1, char* str2){  
+	int i;
+	for(i=0;i<6;i++){
+
+		if(str1[i]==0x0 && str2[i]==0x0){break;}
+		if(str1[i]=='\r' && str2[i]==0x0){break;}
+		if(str1[i] != str2[i]){return 0;}
+	}
+	return 1;
+}
+
 
 
