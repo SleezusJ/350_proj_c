@@ -35,7 +35,8 @@ void terminate(){
 	shellname[4]='l'; shellname[5]='\0';
 
 
-	interrupt(0x21,4,shellname,0,0);
+	executeProgram(shellname);
+	//interrupt(0x21,4,shellname,0,0);
 }
 
 
@@ -46,8 +47,8 @@ void executeProgram(char* name){
 	int sectorsRead;
 	int i;
 	int offset = 0x0;
-
-	makeInterrupt21();
+	
+	//makeInterrupt21();
 	interrupt(0x21,3,name,buffer, &sectorsRead);
 	if(sectorsRead>0){
 		for(i=0;i<13312;i++){
@@ -92,7 +93,6 @@ void readFile(char* buffer, char* filename, int* sectorsRead){
 		if(strCompare(filename, entryName, 0)==1){
 			//load the file sector by sector into the buffer
 			for(i=fileEntry+6;i<fileEntry+32;i++){
-				//if(dir[i]==0x0){return;}//--if dir == NULL, stop. 
 				readSector(buffer,dir[i]);
 				buffer+=512;
 				*sectorsRead = *sectorsRead+1;		
@@ -188,7 +188,7 @@ void readSector(char* buffer, int sector){
 	int DL = 0x80; //device number
 
 	interrupt(0x13,AH*256+AL,buffer,CH*256+CL,DH*256+DL);
-cmd
+
 }
 
 
@@ -206,8 +206,8 @@ void handleInterrupt21(int ax, int bx, int cx, int dx){
 		executeProgram(bx);	
 	}else if(ax==5){
 		terminate();
-	}else if(ax==42){
-		stringCompare(bx,cx,dx);
+	}else if(ax==6){
+		strCompare(bx,cx);
 	}else{printString("ERROR");}
 }
 

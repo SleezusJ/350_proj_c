@@ -4,39 +4,41 @@ int strCompare(char* str1, char* str2);
 
 int main(){
 
-char* cmdBuffer;
+char cmdBuffer[11]; //max cmd len + max fiename len + 1(space)
 char cmdName[4];
 char filename[6];
 int i;
 	while(1){
+
 		//print prompt:
 		syscall(0,"KSH_> ");  //printString
 		//read command
 		syscall(1,cmdBuffer); //readString
-		//------------------------------------
+
 
 		//parse out command name
 		for(i=0;i<4;i++){cmdName[i] = cmdBuffer[i];}
 		
 		//compare cmd
-		if(strCompare(cmdName, "type") == 1){
+		if(strCompare(cmdName, "type") == 1){ //if command is type.
 			
 			//load file name
-			for(i=0;i<6;i++){
-				filename[i] = cmdBuffer[i+5];	
-			}
-			//run type func with file name as a param.
-			syscall(0,"this is the filename:\r\n");
-			syscall(0,filename);
+			for(i=0;i<6;i++){filename[i] = cmdBuffer[i+5];}
+			 
+			//print contents of file designated by 6 char long filename
+			type(filename);
 	
-		}else{
-			syscall(0,"ERROR! This is what is registering: \r\n");
-			syscall(0,cmdName); //-----------TEST
-			//try to execute
-			//syscall(4,cmdBuffer);
+		}else if (strCompare(cmdName, "exec")==1){ //if command is exec.
 
-			syscall(0,"Command not found!\n\r"); //if we get to this point, the command did not run.
+			for(i=0;i<6;i++){filename[i] = cmdBuffer[i+5];}
+		
+			//try to execute program designated by 6 char long filename
+			syscall(4, filename);
+
+		}else{
+			syscall(0, "Command not found!\n\r");
 		}
+
 	}
 
 }
@@ -44,15 +46,16 @@ int i;
 
 void type(char* filename){
 
-	char buffer[13312];
+	char buffer[13312]; //max file size
 	int readSectors;
 	int i;
-	int offset = 0x0;
+	//int offset = 0x0;
 	
-	syscall(3,filename,buffer,&readSectors); //read in file
+	syscall(3,filename,buffer,&readSectors); //read file into buffer
 	if(readSectors>0){
 		syscall(0,buffer); //print buffer
-	}else{syscall(0,"File not found!");}
+		return;
+	}else{syscall(0,"File not found!"); return;}
 
 
 }
